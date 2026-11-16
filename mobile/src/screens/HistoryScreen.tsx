@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { api } from "../api";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { ContentDetail, ProgressItem } from "../types";
 import { Banner, EmptyState, LoadingState, Screen, Title } from "../ui";
 import type { RootStackParamList } from "../navigation";
@@ -69,11 +69,13 @@ export function HistoryScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
-        <Icon name="back" size={20} color={colors.ink} />
-        <Text style={styles.backText}>Profile</Text>
-      </Pressable>
-      <Title>History</Title>
+      <View style={styles.headerBar}>
+        <Title>History</Title>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+          <Icon name="back" size={20} color={colors.ink} />
+          <Text style={styles.backText}>Profile</Text>
+        </Pressable>
+      </View>
       <Text style={styles.sub}>Resume from your last position. Position is not treated as completion.</Text>
       {!session ? <Banner tone="info">Sign in to continue learning.</Banner> : null}
       {error ? <Banner>{error}</Banner> : null}
@@ -108,9 +110,10 @@ export function HistoryScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  back: { flexDirection: "row", alignItems: "center", gap: 6 },
-  backText: { color: colors.ink, fontWeight: "700" },
-  sub: { color: colors.inkMuted, fontSize: 13, marginTop: -8 },
+  headerBar: { minHeight: 44, justifyContent: "center" },
+  back: { position: "absolute", left: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  backText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
+  sub: { color: colors.inkMuted, fontSize: 13, fontFamily: font.body, marginTop: -8 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -129,6 +132,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { color: colors.ink, fontSize: 16, fontWeight: "700" },
-  meta: { color: colors.inkMuted, fontSize: 12, fontWeight: "600" },
+  title: { color: colors.ink, fontSize: 16, fontFamily: font.bold, fontWeight: "700" },
+  meta: { color: colors.inkMuted, fontSize: 12, fontFamily: font.medium, fontWeight: "600" },
 });

@@ -6,7 +6,7 @@ import { pickShortVideo } from "../../creator/media";
 import { Icon } from "../../icons";
 import { contentApi, type Tag } from "../../services/content";
 import { useSession } from "../../session";
-import { colors, radii, space } from "../../theme";
+import { colors, font, radii, space } from "../../theme";
 import type { Category } from "../../types";
 import { Banner, Button, Field, LoadingState, Screen, Title } from "../../ui";
 import type { RootStackParamList } from "../../navigation";
@@ -104,11 +104,13 @@ export function ShortEditorScreen({ navigation, route }: Props) {
 
   return (
     <Screen>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
-        <Icon name="back" size={20} color={colors.ink} />
-        <Text style={styles.backText}>Create</Text>
-      </Pressable>
-      <Title>{contentId ? "Edit short" : "New short"}</Title>
+      <View style={styles.headerBar}>
+        <Title>{contentId ? "Edit short" : "New short"}</Title>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+          <Icon name="back" size={20} color={colors.ink} />
+          <Text style={styles.backText}>Create</Text>
+        </Pressable>
+      </View>
       <Text style={styles.sub}>Status: {status}. Published shorts are not edited in place — take down, revise, then publish again.</Text>
 
       <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 40 }}>
@@ -267,10 +269,11 @@ export function ShortEditorScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  back: { flexDirection: "row", alignItems: "center", gap: 6 },
-  backText: { color: colors.ink, fontWeight: "700" },
-  sub: { color: colors.inkMuted, fontSize: 13, marginTop: -8 },
-  label: { fontSize: 14, fontWeight: "600", color: colors.ink },
+  headerBar: { minHeight: 44, justifyContent: "center" },
+  back: { position: "absolute", left: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  backText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
+  sub: { color: colors.inkMuted, fontSize: 13, fontFamily: font.body, marginTop: -8 },
+  label: { fontSize: 14, fontFamily: font.medium, fontWeight: "600", color: colors.ink },
   chip: {
     minHeight: 36,
     paddingHorizontal: 14,
@@ -281,7 +284,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  chipText: { color: colors.inkMuted, fontWeight: "700", fontSize: 13 },
+  chipText: { color: colors.inkMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 13 },
   chipTextOn: { color: colors.accent },
   upload: {
     flexDirection: "row",
@@ -293,7 +296,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  uploadTitle: { color: colors.ink, fontWeight: "700" },
+  uploadTitle: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
   uploadMeta: { color: colors.inkMuted, fontSize: 12, marginTop: 2 },
   row: { gap: 8 },
 });

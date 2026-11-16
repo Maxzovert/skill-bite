@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Icon, type AppIcon } from "../icons";
-import { colors, radii } from "../theme";
+import { colors, font, radii } from "../theme";
 
 type Props = {
   icon: AppIcon;
@@ -47,6 +47,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     borderColor: colors.accent,
   },
-  label: { fontSize: 12, fontWeight: "600", color: colors.inkMuted },
+  label: { fontSize: 12, fontFamily: font.medium, fontWeight: "600", color: colors.inkMuted },
   labelLight: { color: colors.feedMuted },
 });

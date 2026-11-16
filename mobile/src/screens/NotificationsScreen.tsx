@@ -4,7 +4,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { api } from "../api";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { NotificationItem } from "../types";
 import { Banner, EmptyState, LoadingState, Screen, Title } from "../ui";
 import type { RootStackParamList } from "../navigation";
@@ -53,11 +53,13 @@ export function NotificationsScreen({ navigation }: Props) {
 
   return (
     <Screen>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
-        <Icon name="back" size={20} color={colors.ink} />
-        <Text style={styles.backText}>Profile</Text>
-      </Pressable>
-      <Title>Alerts</Title>
+      <View style={styles.headerBar}>
+        <Title>Alerts</Title>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+          <Icon name="back" size={20} color={colors.ink} />
+          <Text style={styles.backText}>Profile</Text>
+        </Pressable>
+      </View>
       <Text style={styles.sub}>Learning notices stay here. Push delivery is deferred until a provider is chosen.</Text>
       {!session ? <Banner tone="info">Sign in to see alerts.</Banner> : null}
       <Pressable
@@ -98,9 +100,10 @@ export function NotificationsScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  back: { flexDirection: "row", alignItems: "center", gap: 6 },
-  backText: { color: colors.ink, fontWeight: "700" },
-  sub: { color: colors.inkMuted, fontSize: 13, marginTop: -8 },
+  headerBar: { minHeight: 44, justifyContent: "center" },
+  back: { position: "absolute", left: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  backText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
+  sub: { color: colors.inkMuted, fontSize: 13, fontFamily: font.body, marginTop: -8 },
   pushBtn: {
     minHeight: 44,
     borderRadius: radii.md,
@@ -112,7 +115,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  pushText: { color: colors.ink, fontWeight: "700" },
+  pushText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.md,
@@ -122,8 +125,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   row: { flexDirection: "row", alignItems: "center", gap: 8 },
-  title: { color: colors.ink, fontWeight: "700", fontSize: 15, flex: 1 },
-  body: { color: colors.ink, fontSize: 14, lineHeight: 20 },
-  meta: { color: colors.inkMuted, fontSize: 12 },
-  link: { color: colors.accent, fontWeight: "700" },
+  title: { color: colors.ink, fontFamily: font.bold, fontWeight: "700", fontSize: 15, flex: 1 },
+  body: { color: colors.ink, fontSize: 14, lineHeight: 20, fontFamily: font.body },
+  meta: { color: colors.inkMuted, fontSize: 12, fontFamily: font.body },
+  link: { color: colors.accent, fontFamily: font.bold, fontWeight: "700" },
 });

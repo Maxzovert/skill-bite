@@ -6,7 +6,7 @@ import { pickShortVideo } from "../../creator/media";
 import { Icon } from "../../icons";
 import { contentApi, type Tag } from "../../services/content";
 import { useSession } from "../../session";
-import { colors, radii, space } from "../../theme";
+import { colors, font, radii, space } from "../../theme";
 import { Banner, Button, Field, LoadingState, Screen, Title } from "../../ui";
 import type { RootStackParamList } from "../../navigation";
 
@@ -115,11 +115,13 @@ export function CourseStudioScreen({ navigation, route }: Props) {
 
   return (
     <Screen>
-      <Pressable style={styles.back} onPress={() => navigation.goBack()}>
-        <Icon name="back" size={20} color={colors.ink} />
-        <Text style={styles.backText}>Create</Text>
-      </Pressable>
-      <Title>{contentId ? "Manage playlist" : "New playlist"}</Title>
+      <View style={styles.headerBar}>
+        <Title>{contentId ? "Manage playlist" : "New playlist"}</Title>
+        <Pressable style={styles.back} onPress={() => navigation.goBack()}>
+          <Icon name="back" size={20} color={colors.ink} />
+          <Text style={styles.backText}>Create</Text>
+        </Pressable>
+      </View>
       <Text style={styles.sub}>
         Sections group topics. Each topic is one short. Viewers may watch topics in any order.
       </Text>
@@ -287,11 +289,12 @@ export function CourseStudioScreen({ navigation, route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  back: { flexDirection: "row", alignItems: "center", gap: 6 },
-  backText: { color: colors.ink, fontWeight: "700" },
-  sub: { color: colors.inkMuted, fontSize: 13, lineHeight: 18, marginTop: -8 },
-  section: { fontSize: 16, fontWeight: "700", color: colors.ink },
-  label: { fontSize: 14, fontWeight: "600", color: colors.ink },
+  headerBar: { minHeight: 44, justifyContent: "center" },
+  back: { position: "absolute", left: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", gap: 6 },
+  backText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
+  sub: { color: colors.inkMuted, fontSize: 13, lineHeight: 18, fontFamily: font.body, marginTop: -8 },
+  section: { fontSize: 16, fontFamily: font.bold, fontWeight: "700", color: colors.ink },
+  label: { fontSize: 14, fontFamily: font.medium, fontWeight: "600", color: colors.ink },
   chip: {
     minHeight: 36,
     paddingHorizontal: 14,
@@ -302,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  chipText: { color: colors.inkMuted, fontWeight: "700", fontSize: 13 },
+  chipText: { color: colors.inkMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 13 },
   chipTextOn: { color: colors.accent },
   upload: {
     flexDirection: "row",
@@ -314,7 +317,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
-  uploadTitle: { color: colors.ink, fontWeight: "700" },
+  uploadTitle: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
   uploadMeta: { color: colors.inkMuted, fontSize: 12, marginTop: 2 },
   topicRow: {
     flexDirection: "row",
@@ -324,5 +327,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     backgroundColor: colors.accentSoft,
   },
-  topicText: { color: colors.ink, fontWeight: "600", flex: 1 },
+  topicText: { color: colors.ink, fontFamily: font.medium, fontWeight: "600", flex: 1 },
 });

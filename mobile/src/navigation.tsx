@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "./session";
 import { tabIcon } from "./icons";
-import { colors } from "./theme";
+import { colors, font } from "./theme";
 import { LoadingState, Screen } from "./ui";
 import { BookmarksScreen } from "./screens/BookmarksScreen";
 import { BrowseScreen } from "./screens/BrowseScreen";
@@ -51,7 +51,7 @@ const appTheme = {
     ...DarkTheme.colors,
     background: colors.bg,
     card: colors.tabBar,
-    text: colors.feedText,
+    text: colors.ink,
     border: colors.line,
     primary: colors.accent,
   },
@@ -72,7 +72,7 @@ function MainTabs() {
         },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.tabInactive,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "700" },
+        tabBarLabelStyle: { fontSize: 11, fontFamily: font.bold, fontWeight: "700" },
         tabBarIcon: ({ focused, color, size }) => (
           <Ionicons name={tabIcon(route.name, focused)} size={size} color={color} />
         ),

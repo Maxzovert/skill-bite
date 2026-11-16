@@ -1,9 +1,19 @@
+import Constants from "expo-constants";
 import { Platform } from "react-native";
 
 export const apiBase = "http://127.0.0.1:3000";
 export const androidApiBase = "http://10.0.2.2:3000";
 
+function devHost(): string | null {
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.expoGoConfig?.debuggerHost;
+  const host = hostUri?.split(":")[0];
+  return host || null;
+}
+
 export function getApiBase(): string {
+  if (Platform.OS === "web") return apiBase;
+  const host = devHost();
+  if (host) return `http://${host}:3000`;
   return Platform.OS === "android" ? androidApiBase : apiBase;
 }
 

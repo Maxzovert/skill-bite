@@ -6,7 +6,7 @@ import { api } from "../api";
 import { AuthShell } from "../components/AuthShell";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { Me } from "../types";
 import { Banner, Field } from "../ui";
 import type { AuthStackParamList } from "../navigation";
@@ -31,7 +31,7 @@ export function LoginScreen({ navigation }: Props) {
       let me = await api<Me>("/api/v1/me", { token: result.accessToken });
       if (me.role === "USER") {
         await api("/api/v1/me/role", { method: "PATCH", token: result.accessToken, body: { role: "CREATOR" } });
-        me = await api<Me>("/api/v1/me", { token: result.accessToken });
+        me = { ...me, role: "CREATOR" };
       }
       await setSession({
         token: result.accessToken,
@@ -48,6 +48,7 @@ export function LoginScreen({ navigation }: Props) {
 
   return (
     <AuthShell
+      plain
       eyebrow="Welcome back"
       title="Sign in to continue"
       subtitle="Pick up your shorts, playlists, and progress in one place."
@@ -59,23 +60,8 @@ export function LoginScreen({ navigation }: Props) {
         </Pressable>
       )}
     >
-      <View style={styles.fieldBlock}>
-        <View style={styles.fieldIcon}>
-          <Icon name="mail" size={18} color={colors.accent} />
-        </View>
-        <View style={styles.fieldBody}>
-          <Field label="Email" value={email} onChangeText={setEmail} />
-        </View>
-      </View>
-
-      <View style={styles.fieldBlock}>
-        <View style={styles.fieldIcon}>
-          <Icon name="lock" size={18} color={colors.accent} />
-        </View>
-        <View style={styles.fieldBody}>
-          <Field label="Password" value={password} onChangeText={setPassword} secure />
-        </View>
-      </View>
+      <Field label="Email" value={email} onChangeText={setEmail} />
+      <Field label="Password" value={password} onChangeText={setPassword} secure />
 
       {error ? <Banner>{error}</Banner> : null}
 
@@ -86,7 +72,7 @@ export function LoginScreen({ navigation }: Props) {
         onPress={() => void submit()}
       >
         <LinearGradient
-          colors={[colors.accent, "#1BC4A8"]}
+          colors={[colors.accentAlt, colors.accent]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.ctaFill}
@@ -114,7 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.accentSoft,
     borderWidth: 1,
-    borderColor: "rgba(46,230,197,0.25)",
+    borderColor: colors.line,
   },
   fieldBody: { flex: 1 },
   cta: {
@@ -134,7 +120,7 @@ const styles = StyleSheet.create({
   ctaText: {
     color: colors.accentInk,
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: font.heavy, fontWeight: "800",
   },
   switchPill: {
     flexDirection: "row",
@@ -143,10 +129,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     paddingVertical: space.md,
     borderRadius: radii.pill,
-    backgroundColor: "rgba(18,26,42,0.72)",
+    backgroundColor: colors.bg,
     borderWidth: 1,
     borderColor: colors.line,
   },
-  switchText: { color: colors.inkMuted, fontWeight: "600", fontSize: 14 },
-  switchAccent: { color: colors.accent, fontWeight: "800", fontSize: 14 },
+  switchText: { color: colors.inkMuted, fontFamily: font.medium, fontWeight: "600", fontSize: 14 },
+  switchAccent: { color: colors.accent, fontFamily: font.heavy, fontWeight: "800", fontSize: 14 },
 });

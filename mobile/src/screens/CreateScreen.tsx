@@ -5,7 +5,7 @@ import { useFocusEffect, type CompositeScreenProps } from "@react-navigation/nat
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import { Banner, LoadingState, Screen, Title } from "../ui";
 import type { MainTabParamList, RootStackParamList } from "../navigation";
 
@@ -21,7 +21,6 @@ export function CreateScreen({ navigation }: Props) {
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    setReady(false);
     setError("");
     void ensurePublisher()
       .then(() => {
@@ -62,7 +61,7 @@ export function CreateScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  sub: { color: colors.inkMuted, fontSize: 14, lineHeight: 20, marginTop: -8 },
+  sub: { color: colors.inkMuted, fontSize: 14, lineHeight: 20, fontFamily: font.body, marginTop: -8 },
   actions: { gap: 12 },
   primaryCard: {
     backgroundColor: colors.accent,
@@ -70,8 +69,8 @@ const styles = StyleSheet.create({
     padding: space.xl,
     gap: 8,
   },
-  primaryTitle: { color: colors.accentInk, fontSize: 18, fontWeight: "800" },
-  primaryMeta: { color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 18 },
+  primaryTitle: { color: colors.accentInk, fontSize: 22, fontFamily: font.display },
+  primaryMeta: { color: "rgba(255,255,255,0.85)", fontSize: 13, lineHeight: 18, fontFamily: font.body },
   secondaryCard: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
@@ -80,6 +79,6 @@ const styles = StyleSheet.create({
     padding: space.xl,
     gap: 6,
   },
-  secondaryTitle: { color: colors.ink, fontSize: 16, fontWeight: "800" },
-  secondaryMeta: { color: colors.inkMuted, fontSize: 13, lineHeight: 18 },
+  secondaryTitle: { color: colors.ink, fontSize: 22, fontFamily: font.display },
+  secondaryMeta: { color: colors.inkMuted, fontSize: 13, lineHeight: 18, fontFamily: font.body },
 });

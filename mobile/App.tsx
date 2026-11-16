@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
+import { StatusBar, StyleSheet } from "react-native";
+import { useFonts, Quicksand_600SemiBold } from "@expo-google-fonts/quicksand";
+import {
+  Nunito_400Regular,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
+} from "@expo-google-fonts/nunito";
 import * as SplashScreenNative from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppNavigation } from "./src/navigation";
@@ -14,16 +21,22 @@ void SplashScreenNative.preventAutoHideAsync().catch(() => undefined);
 export default function App() {
   const [booting, setBooting] = useState(true);
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const [fontsLoaded, fontError] = useFonts({
+    Quicksand_600SemiBold,
+    Nunito_400Regular,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+  });
 
   useEffect(() => {
     let active = true;
     async function boot() {
       const [done] = await Promise.all([
         loadOnboardingDone(),
-        new Promise((resolve) => setTimeout(resolve, 1600)),
         SplashScreenNative.hideAsync().catch(() => undefined),
       ]);
-      if (!active) return;
+      if (!active || (!fontsLoaded && !fontError)) return;
       setOnboardingDone(done);
       setBooting(false);
     }
@@ -31,12 +44,12 @@ export default function App() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [fontsLoaded, fontError]);
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={styles.root}>
       <SessionProvider>
-        <StatusBar barStyle="light-content" backgroundColor={colors.bg} />
+        <StatusBar barStyle="dark-content" backgroundColor={colors.bg} />
         {booting ? (
           <SplashScreen onFinished={() => undefined} />
         ) : !onboardingDone ? (
@@ -48,3 +61,7 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+});

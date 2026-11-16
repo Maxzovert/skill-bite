@@ -1,17 +1,18 @@
 import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { colors } from "../theme";
 
 export function LinearishScrim() {
   return (
     <>
       <LinearGradient
         pointerEvents="none"
-        colors={["rgba(5,8,15,0.55)", "transparent"]}
+        colors={["rgba(196,54,112,0.45)", "transparent"]}
         style={styles.top}
       />
       <LinearGradient
         pointerEvents="none"
-        colors={["transparent", "rgba(5,8,15,0.35)", "rgba(5,8,15,0.88)"]}
+        colors={["transparent", "rgba(196,54,112,0.28)", "rgba(196,54,112,0.88)"]}
         locations={[0, 0.35, 1]}
         style={styles.bottom}
       />
@@ -41,6 +42,6 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 2,
-    backgroundColor: "rgba(46,230,197,0.15)",
+    backgroundColor: colors.accentAlt,
   },
 });
