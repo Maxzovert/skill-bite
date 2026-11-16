@@ -73,6 +73,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         if (!cancelled) setReady(true);
         return;
       }
+      if (!cancelled) {
+        setSessionState(stored);
+        setReady(true);
+      }
       try {
         const rotated = await api<{ accessToken: string; refreshToken: string }>("/api/v1/auth/refresh", {
           method: "POST",
@@ -81,7 +85,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         let me = await api<Me>("/api/v1/me", { token: rotated.accessToken });
         if (me.role === "USER") {
           await api("/api/v1/me/role", { method: "PATCH", token: rotated.accessToken, body: { role: "CREATOR" } });
-          me = await api<Me>("/api/v1/me", { token: rotated.accessToken });
+          me = { ...me, role: "CREATOR" };
         }
         if (cancelled) return;
         const next = {

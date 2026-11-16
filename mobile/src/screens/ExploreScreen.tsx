@@ -5,7 +5,7 @@ import type { CompositeScreenProps } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { api } from "../api";
 import { Icon } from "../icons";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { Category, ContentItem } from "../types";
 import { Banner, EmptyState, LoadingState, Screen, Title } from "../ui";
 import type { MainTabParamList, RootStackParamList } from "../navigation";
@@ -121,7 +121,7 @@ export function ExploreScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  sub: { color: colors.inkMuted, fontSize: 14, lineHeight: 20, marginTop: -8 },
+  sub: { color: colors.inkMuted, fontSize: 14, lineHeight: 20, fontFamily: font.body, marginTop: -8 },
   search: {
     flexDirection: "row",
     alignItems: "center",
@@ -133,11 +133,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     minHeight: 48,
   },
-  input: { flex: 1, color: colors.ink, fontSize: 15, paddingVertical: 10 },
+  input: { flex: 1, color: colors.ink, fontSize: 15, fontFamily: font.body, paddingVertical: 10 },
   chips: { gap: 8, paddingVertical: 4 },
   chip: {
-    minHeight: 36,
     paddingHorizontal: 14,
+    maxWidth: 180,
+    paddingVertical: 10,
     borderRadius: radii.pill,
     borderWidth: 1,
     borderColor: colors.line,
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
-  chipText: { color: colors.inkMuted, fontWeight: "700", fontSize: 13 },
+  chipText: { color: colors.inkMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 13, textAlign: "center" },
   chipTextOn: { color: colors.accent },
   row: {
     flexDirection: "row",
@@ -165,8 +166,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  title: { color: colors.ink, fontSize: 16, fontWeight: "700" },
-  meta: { color: colors.inkMuted, fontSize: 12, fontWeight: "600" },
+  title: { color: colors.ink, fontSize: 16, fontFamily: font.bold, fontWeight: "700" },
+  meta: { color: colors.inkMuted, fontSize: 12, fontFamily: font.medium, fontWeight: "600" },
   labelRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   labelChip: {
     paddingHorizontal: 8,
@@ -174,5 +175,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     backgroundColor: colors.accentSoft,
   },
-  labelChipText: { color: colors.accent, fontSize: 11, fontWeight: "700" },
+  labelChipText: { color: colors.accent, fontSize: 11, fontFamily: font.bold, fontWeight: "700" },
 });

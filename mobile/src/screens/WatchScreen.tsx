@@ -9,7 +9,7 @@ import { IconButton } from "../components/IconButton";
 import { LinearishScrim } from "../components/Scrim";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { ContentDetail, ProgressItem } from "../types";
 import { Banner, EmptyState, LoadingState } from "../ui";
 import type { RootStackParamList } from "../navigation";
@@ -177,7 +177,6 @@ export function WatchScreen({ route, navigation }: Props) {
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.copy}>
-          <Text style={styles.badge}>{content.contentType === "COURSE" ? "Course" : "Micro lesson"}</Text>
           <Text style={styles.title}>{content.title}</Text>
           {content.description ? <Text style={styles.desc} numberOfLines={3}>{content.description}</Text> : null}
           {courseProgress ? <Text style={styles.desc}>{courseProgress}</Text> : null}
@@ -274,8 +273,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 6,
   },
-  backText: { color: colors.feedText, fontWeight: "700" },
-  topMeta: { color: colors.feedMuted, fontSize: 12, fontWeight: "600" },
+  backText: { color: colors.feedText, fontFamily: font.bold, fontWeight: "700" },
+  topMeta: { color: colors.feedMuted, fontSize: 12, fontFamily: font.medium, fontWeight: "600" },
   pauseBadge: {
     position: "absolute",
     alignSelf: "center",
@@ -307,10 +306,10 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: radii.pill,
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: font.bold, fontWeight: "700",
   },
-  title: { color: colors.feedText, fontSize: 24, lineHeight: 30, fontWeight: "800" },
-  desc: { color: colors.feedMuted, fontSize: 13, lineHeight: 18 },
+  title: { color: colors.feedText, fontSize: 24, lineHeight: 32, fontFamily: font.display },
+  desc: { color: colors.feedMuted, fontSize: 13, lineHeight: 18, fontFamily: font.body },
   outlineBtn: {
     alignSelf: "flex-start",
     flexDirection: "row",
@@ -322,7 +321,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     marginTop: 4,
   },
-  outlineBtnText: { color: colors.accentInk, fontWeight: "700", fontSize: 13 },
+  outlineBtnText: { color: colors.accentInk, fontFamily: font.bold, fontWeight: "700", fontSize: 13 },
   rail: { gap: 16, paddingBottom: 4 },
   sheet: {
     position: "absolute",
@@ -330,17 +329,17 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: radii.md,
+    borderTopRightRadius: radii.md,
     padding: 16,
     gap: 12,
     maxHeight: "48%",
   },
-  sheetTitle: { fontSize: 18, fontWeight: "700", color: colors.ink },
-  module: { fontSize: 14, fontWeight: "700", color: colors.inkMuted },
+  sheetTitle: { fontSize: 18, fontFamily: font.bold, fontWeight: "700", color: colors.ink },
+  module: { fontSize: 14, fontFamily: font.bold, fontWeight: "700", color: colors.inkMuted },
   lesson: {
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: radii.md,
     borderWidth: 1,
     borderColor: colors.line,
     paddingHorizontal: 12,
@@ -350,5 +349,5 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   lessonOn: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  lessonText: { color: colors.ink, fontWeight: "600", flex: 1 },
+  lessonText: { color: colors.ink, fontFamily: font.medium, fontWeight: "600", flex: 1 },
 });

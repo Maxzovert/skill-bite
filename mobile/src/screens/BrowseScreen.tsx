@@ -16,10 +16,11 @@ import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { api } from "../api";
+import { AppLogo } from "../components/AppLogo";
 import { ShortFeedCard, feedPageHeight } from "../components/ShortFeedCard";
 import { Icon } from "../icons";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { Category, ContentItem } from "../types";
 import { Banner, EmptyState, LoadingState } from "../ui";
 import type { MainTabParamList, RootStackParamList } from "../navigation";
@@ -53,18 +54,16 @@ export function BrowseScreen({ navigation }: Props) {
       const params = new URLSearchParams({ sort: "newest" });
       if (query.trim()) params.set("q", query.trim());
       if (category) params.set("category", category);
-      const [content, cats] = await Promise.all([
+      const [content, cats, saved] = await Promise.all([
         api<{ items: ContentItem[] }>(`/api/v1/content?${params.toString()}`),
         api<{ items: Category[] }>("/api/v1/categories"),
+        session?.token
+          ? api<{ items: { contentId: string }[] }>("/api/v1/me/bookmarks", { token: session.token })
+          : Promise.resolve({ items: [] as { contentId: string }[] }),
       ]);
       setItems(content.items);
       setCategories(cats.items);
-      if (session?.token) {
-        const saved = await api<{ items: { contentId: string }[] }>("/api/v1/me/bookmarks", { token: session.token });
-        setBookmarks(new Set(saved.items.map((item) => item.contentId)));
-      } else {
-        setBookmarks(new Set());
-      }
+      setBookmarks(new Set(saved.items.map((item) => item.contentId)));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Content could not be loaded");
     } finally {
@@ -131,8 +130,9 @@ export function BrowseScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
       <View style={[styles.topBar, { paddingTop: insets.top + space.sm }]}>
-        <View>
-          <Text style={styles.kicker}>SkillBite</Text>
+        <View style={styles.headerSide} />
+        <View style={styles.brandRow}>
+          <AppLogo size={40} />
           <Text style={styles.brand}>SkillBite</Text>
         </View>
         <Pressable style={styles.searchBtn} onPress={() => setSearchOpen((value) => !value)}>
@@ -232,8 +232,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  kicker: { color: colors.feedMuted, fontSize: 12, fontWeight: "600" },
-  brand: { color: colors.feedText, fontSize: 22, fontWeight: "800" },
+  headerSide: { width: 44 },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  brand: { color: colors.feedText, fontSize: 22, fontFamily: font.display },
   searchBtn: {
     width: 44,
     height: 44,
@@ -251,16 +252,14 @@ const styles = StyleSheet.create({
   searchPanelInline: {
     marginHorizontal: space.lg,
     marginBottom: space.sm,
-    backgroundColor: "rgba(14,13,12,0.88)",
-    borderRadius: radii.md,
-    padding: space.md,
   },
   searchInput: {
     minHeight: 44,
-    borderRadius: radii.sm,
+    borderRadius: radii.md,
     paddingHorizontal: space.md,
     color: colors.feedText,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    fontFamily: font.body,
+    backgroundColor: "rgba(251,244,235,0.92)",
   },
   chip: {
     minHeight: 36,
@@ -271,7 +270,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { color: colors.feedMuted, fontWeight: "700", fontSize: 13 },
+  chipText: { color: colors.feedMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 13 },
   chipTextOn: { color: colors.accentInk },
   toast: {
     position: "absolute",
@@ -285,7 +284,7 @@ const styles = StyleSheet.create({
   },
   toastText: {
     color: colors.accentInk,
-    fontWeight: "700",
+    fontFamily: font.bold, fontWeight: "700",
     fontSize: 13,
   },
   errorWrap: { position: "absolute", zIndex: 3, top: 120, left: 16, right: 16 },

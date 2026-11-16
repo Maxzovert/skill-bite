@@ -12,9 +12,10 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AppLogo } from "../components/AppLogo";
 import { Icon, type AppIcon } from "../icons";
 import { saveOnboardingDone } from "../onboardingStore";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 
 type Slide = {
   key: string;
@@ -85,8 +86,12 @@ export function OnboardingScreen({ onDone }: Props) {
         style={StyleSheet.absoluteFill}
       />
       <View style={[styles.top, { paddingTop: insets.top + space.md }]}>
-        <Text style={styles.brand}>SkillBite</Text>
-        <Pressable onPress={() => void finish()} hitSlop={12}>
+        <View style={styles.headerSide} />
+        <View style={styles.brandRow}>
+          <AppLogo size={36} />
+          <Text style={styles.brand}>SkillBite</Text>
+        </View>
+        <Pressable style={styles.headerSide} onPress={() => void finish()} hitSlop={12}>
           <Text style={styles.skip}>Skip</Text>
         </Pressable>
       </View>
@@ -107,7 +112,7 @@ export function OnboardingScreen({ onDone }: Props) {
           <View style={[styles.slide, { width }]}>
             <View style={[styles.iconOrb, { backgroundColor: `${item.accent}22`, borderColor: `${item.accent}55` }]}>
               <View style={[styles.iconCore, { backgroundColor: item.accent }]}>
-                <Icon name={item.icon} size={34} color={item.accent === colors.warning ? "#1A1400" : colors.accentInk} />
+                <Icon name={item.icon} size={34} color={item.accent === colors.warning ? colors.accent : colors.accentInk} />
               </View>
             </View>
             <Text style={styles.title}>{item.title}</Text>
@@ -125,7 +130,7 @@ export function OnboardingScreen({ onDone }: Props) {
         </View>
         <Pressable style={styles.cta} onPress={next}>
           <LinearGradient
-            colors={[colors.accent, "#1BC4A8"]}
+            colors={[colors.accentAlt, colors.accent]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.ctaFill}
@@ -146,8 +151,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  brand: { color: colors.ink, fontSize: 18, fontWeight: "800" },
-  skip: { color: colors.inkMuted, fontWeight: "700", fontSize: 14 },
+  headerSide: { width: 56, alignItems: "flex-end" },
+  brandRow: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  brand: { color: colors.ink, fontSize: 18, fontFamily: font.display },
+  skip: { color: colors.inkMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 14 },
   slide: {
     paddingHorizontal: space.xxl,
     justifyContent: "center",
@@ -173,8 +180,8 @@ const styles = StyleSheet.create({
   title: {
     color: colors.ink,
     fontSize: 32,
-    lineHeight: 38,
-    fontWeight: "800",
+    lineHeight: 40,
+    fontFamily: font.display,
     letterSpacing: -0.4,
     textAlign: "center",
   },
@@ -182,6 +189,7 @@ const styles = StyleSheet.create({
     color: colors.inkMuted,
     fontSize: 16,
     lineHeight: 24,
+    fontFamily: font.body,
     textAlign: "center",
   },
   footer: {
@@ -215,6 +223,6 @@ const styles = StyleSheet.create({
   ctaText: {
     color: colors.accentInk,
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: font.heavy, fontWeight: "800",
   },
 });

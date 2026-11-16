@@ -5,7 +5,7 @@ import { LinearishScrim } from "./Scrim";
 import { IconButton } from "./IconButton";
 import { Icon } from "../icons";
 import { mediaUrl } from "../api";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import type { ContentItem } from "../types";
 
 type Props = {
@@ -18,13 +18,6 @@ type Props = {
   onShare: () => void;
   onProgress?: (seconds: number) => void;
 };
-
-function isNew(publishedAt?: string | null): boolean {
-  if (!publishedAt) return false;
-  const published = new Date(publishedAt).getTime();
-  if (Number.isNaN(published)) return false;
-  return Date.now() - published < 7 * 24 * 60 * 60 * 1000;
-}
 
 export function ShortFeedCard({
   item,
@@ -39,11 +32,7 @@ export function ShortFeedCard({
   const videoRef = useRef<Video | null>(null);
   const [paused, setPaused] = useState(false);
   const isVideo = item.contentType === "VIDEO";
-  const labels = [
-    ...(isNew(item.publishedAt) ? [{ name: "New", slug: "new" }] : []),
-    ...(item.categories ?? []),
-    ...(item.tags ?? []),
-  ].slice(0, 3);
+  const labels = [...(item.categories ?? []), ...(item.tags ?? [])].slice(0, 3);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,10 +90,6 @@ export function ShortFeedCard({
       <View style={styles.bottom}>
         <View style={styles.copy}>
           <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Icon name={isVideo ? "video" : "course"} size={14} color={colors.accentInk} />
-              <Text style={styles.badgeText}>{isVideo ? "Short" : "Playlist"}</Text>
-            </View>
             {labels.map((label) => (
               <View key={`${label.slug}-${label.name}`} style={styles.labelChip}>
                 <Text style={styles.labelChipText}>{label.name}</Text>
@@ -151,9 +136,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: space.md,
-    backgroundColor: "#1A2924",
+    backgroundColor: colors.videoBg,
   },
-  courseHint: { color: colors.feedMuted, fontSize: 14, fontWeight: "600" },
+  courseHint: { color: colors.feedMuted, fontSize: 14, fontFamily: font.medium, fontWeight: "600" },
   tapZone: { ...StyleSheet.absoluteFillObject },
   pauseBadge: {
     position: "absolute",
@@ -188,16 +173,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: radii.pill,
   },
-  badgeText: { color: colors.accentInk, fontSize: 12, fontWeight: "700" },
+  badgeText: { color: colors.accentInk, fontSize: 12, fontFamily: font.bold, fontWeight: "700" },
   labelChip: {
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: radii.pill,
     backgroundColor: "rgba(255,255,255,0.16)",
   },
-  labelChipText: { color: colors.feedText, fontSize: 11, fontWeight: "700" },
-  title: { color: colors.feedText, fontSize: 22, lineHeight: 28, fontWeight: "700" },
-  meta: { color: colors.feedMuted, fontSize: 13, lineHeight: 18 },
+  labelChipText: { color: colors.feedText, fontSize: 11, fontFamily: font.bold, fontWeight: "700" },
+  title: { color: colors.feedText, fontSize: 22, lineHeight: 30, fontFamily: font.display },
+  meta: { color: colors.feedMuted, fontSize: 13, lineHeight: 18, fontFamily: font.body },
   openBtn: {
     marginTop: space.sm,
     alignSelf: "flex-start",
@@ -209,6 +194,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: radii.pill,
   },
-  openBtnText: { color: colors.accentInk, fontSize: 13, fontWeight: "700" },
+  openBtnText: { color: colors.accentInk, fontSize: 13, fontFamily: font.bold, fontWeight: "700" },
   rail: { gap: space.lg, paddingBottom: space.sm },
 });

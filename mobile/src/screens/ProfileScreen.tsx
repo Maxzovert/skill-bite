@@ -6,7 +6,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Icon } from "../icons";
 import { contentApi, type OwnedContent } from "../services/content";
 import { useSession } from "../session";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import { Banner, EmptyState, LoadingState, Screen, Title } from "../ui";
 import type { MainTabParamList, RootStackParamList } from "../navigation";
 
@@ -33,8 +33,10 @@ export function ProfileScreen({ navigation }: Props) {
     setError("");
     try {
       await ensurePublisher();
-      await refreshProfile();
-      const result = await contentApi.mine(session.token);
+      const [, result] = await Promise.all([
+        refreshProfile(),
+        contentApi.mine(session.token),
+      ]);
       setItems(result.items);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not load profile");
@@ -106,11 +108,14 @@ export function ProfileScreen({ navigation }: Props) {
         <Title>Profile</Title>
         <View style={styles.card}>
           <View style={styles.avatar}>
-            <Icon name="accountActive" size={28} color={colors.accentInk} />
+            <Icon name="accountActive" size={36} color={colors.accentInk} />
           </View>
-          <Text style={styles.name}>{profile?.displayName ?? "You"}</Text>
-          <Text style={styles.meta}>{profile?.email}</Text>
-          <Text style={styles.meta}>{shorts.length} shorts · {playlists.length} playlists</Text>
+          <View style={styles.info}>
+            <Text style={styles.name}>{profile?.displayName ?? "You"}</Text>
+            <Text style={styles.meta}>{profile?.email?.split("@")[0] || "Username"}</Text>
+            <Text style={styles.meta}>{shorts.length} shorts</Text>
+            <Text style={styles.meta}>{playlists.length} playlists</Text>
+          </View>
         </View>
 
         <Text style={styles.section}>Library</Text>
@@ -132,6 +137,7 @@ export function ProfileScreen({ navigation }: Props) {
         <Text style={styles.section}>My shorts</Text>
         {loading ? <LoadingState /> : null}
         {!loading && !shorts.length ? <EmptyState>No shorts yet. Open Create to upload one.</EmptyState> : null}
+        {shorts.length ? <View style={styles.group}>
         {shorts.map((item) => (
           <View key={item.contentId} style={styles.item}>
             <Pressable
@@ -157,9 +163,11 @@ export function ProfileScreen({ navigation }: Props) {
             )}
           </View>
         ))}
+        </View> : null}
 
         <Text style={styles.section}>My playlists</Text>
         {!loading && !playlists.length ? <EmptyState>No playlists yet. Create one to group shorts.</EmptyState> : null}
+        {playlists.length ? <View style={styles.group}>
         {playlists.map((item) => (
           <View key={item.contentId} style={styles.item}>
             <Pressable
@@ -185,6 +193,7 @@ export function ProfileScreen({ navigation }: Props) {
             )}
           </View>
         ))}
+        </View> : null}
 
         {session.role === "ADMIN" ? (
           <Banner tone="info">Admin tools stay on the web portal.</Banner>
@@ -204,25 +213,34 @@ export function ProfileScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   card: {
+    flexDirection: "row",
+    alignItems: "stretch",
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: space.xl,
-    gap: 6,
+    overflow: "hidden",
+  },
+  group: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    overflow: "hidden",
   },
   avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+    width: "40%",
+    aspectRatio: 1,
     backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 8,
   },
-  name: { fontSize: 22, fontWeight: "800", color: colors.ink },
-  meta: { color: colors.inkMuted, fontSize: 13, fontWeight: "600" },
-  section: { fontSize: 16, fontWeight: "700", color: colors.ink },
+  info: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    gap: space.xs,
+  },
+  name: { fontSize: 22, fontFamily: font.heavy, fontWeight: "800", color: colors.ink },
+  meta: { color: colors.inkMuted, fontSize: 13, fontFamily: font.medium, fontWeight: "600" },
+  section: { fontSize: 16, fontFamily: font.bold, fontWeight: "700", color: colors.ink },
   rowLinks: { flexDirection: "row", gap: 8 },
   link: {
     flex: 1,
@@ -236,22 +254,18 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 8,
   },
-  linkText: { color: colors.ink, fontWeight: "700", fontSize: 12 },
+  linkText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700", fontSize: 12 },
   item: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.surface,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    borderColor: colors.line,
     padding: space.lg,
   },
-  itemTitle: { color: colors.ink, fontWeight: "700", fontSize: 15 },
-  itemMeta: { color: colors.inkMuted, fontSize: 12, fontWeight: "600" },
+  itemTitle: { color: colors.ink, fontFamily: font.bold, fontWeight: "700", fontSize: 15 },
+  itemMeta: { color: colors.inkMuted, fontSize: 12, fontFamily: font.medium, fontWeight: "600" },
   actions: { flexDirection: "row", alignItems: "center", gap: 12 },
-  action: { color: colors.accent, fontWeight: "800", fontSize: 13 },
-  actionDanger: { color: colors.danger, fontWeight: "800", fontSize: 13 },
+  action: { color: colors.accent, fontFamily: font.heavy, fontWeight: "800", fontSize: 13 },
+  actionDanger: { color: colors.danger, fontFamily: font.heavy, fontWeight: "800", fontSize: 13 },
   actionRow: {
     minHeight: 52,
     borderRadius: radii.md,
@@ -263,5 +277,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
-  actionRowText: { color: colors.ink, fontWeight: "700", fontSize: 15 },
+  actionRowText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700", fontSize: 15 },
 });

@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Icon } from "../icons";
-import { colors, radii, space } from "../theme";
+import { AppLogo } from "./AppLogo";
+import { colors, font, radii, space } from "../theme";
 
 type Props = {
   eyebrow: string;
@@ -19,26 +19,16 @@ type Props = {
   subtitle: string;
   children: ReactNode;
   footer: ReactNode;
+  plain?: boolean;
 };
 
-export function AuthShell({ eyebrow, title, subtitle, children, footer }: Props) {
+export function AuthShell({ eyebrow, title, subtitle, children, footer, plain = false }: Props) {
   const insets = useSafeAreaInsets();
   const enter = useRef(new Animated.Value(0)).current;
-  const orb = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(enter, { toValue: 1, duration: 480, useNativeDriver: true }),
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(orb, { toValue: 1, duration: 4200, useNativeDriver: true }),
-          Animated.timing(orb, { toValue: 0, duration: 4200, useNativeDriver: true }),
-        ]),
-      ),
-    ]).start();
-  }, [enter, orb]);
-
-  const drift = orb.interpolate({ inputRange: [0, 1], outputRange: [0, 18] });
+    Animated.timing(enter, { toValue: 1, duration: 320, useNativeDriver: true }).start();
+  }, [enter]);
 
   return (
     <View style={styles.root}>
@@ -46,13 +36,8 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: Props)
         colors={[colors.gradientStart, colors.gradientMid, colors.gradientEnd]}
         style={StyleSheet.absoluteFill}
       />
-      <Animated.View style={[styles.orbTeal, { transform: [{ translateY: drift }] }]} />
-      <Animated.View
-        style={[
-          styles.orbBlue,
-          { transform: [{ translateY: orb.interpolate({ inputRange: [0, 1], outputRange: [10, -14] }) }] },
-        ]}
-      />
+      <View style={styles.orbTeal} />
+      <View style={styles.orbBlue} />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -61,37 +46,32 @@ export function AuthShell({ eyebrow, title, subtitle, children, footer }: Props)
         <ScrollView
           contentContainerStyle={[
             styles.content,
+            plain ? styles.contentPlain : null,
             { paddingTop: insets.top + space.xl, paddingBottom: insets.bottom + space.xxl },
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <Animated.View
-            style={{
-              opacity: enter,
-              transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }],
-            }}
+            style={[
+              plain ? styles.plainStack : null,
+              {
+                opacity: enter,
+                transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }],
+              },
+            ]}
           >
-            <View style={styles.hero}>
-              <View style={styles.markGlow} />
-              <View style={styles.mark}>
-                <Icon name="learnActive" size={30} color={colors.accentInk} />
-              </View>
-              <Text style={styles.brand}>SkillBite</Text>
-              <Text style={styles.eyebrow}>{eyebrow}</Text>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.subtitle}>{subtitle}</Text>
+            <View style={[styles.hero, plain ? styles.heroPlain : null]}>
+              <AppLogo size={plain ? 120 : 88} />
+              <Text style={[styles.brand, plain ? styles.brandPlain : null]}>SkillBite</Text>
+              <Text style={[styles.eyebrow, plain ? styles.centeredText : null]}>{eyebrow}</Text>
+              <Text style={[styles.title, plain ? styles.centeredText : null]}>{title}</Text>
+              <Text style={[styles.subtitle, plain ? styles.centeredText : null]}>{subtitle}</Text>
             </View>
 
-            <View style={styles.card}>
-              <LinearGradient
-                colors={["rgba(26,36,56,0.96)", "rgba(18,26,42,0.98)"]}
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.cardInner}>{children}</View>
-            </View>
+            <View style={[styles.card, plain ? styles.cardPlain : null]}>{children}</View>
 
-            <View style={styles.footer}>{footer}</View>
+            <View style={[styles.footer, plain ? styles.footerPlain : null]}>{footer}</View>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -106,12 +86,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     gap: space.xl,
   },
+  contentPlain: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  plainStack: {
+    gap: space.xl,
+  },
   orbTeal: {
     position: "absolute",
     width: 260,
     height: 260,
     borderRadius: 130,
-    backgroundColor: "rgba(46,230,197,0.14)",
+    backgroundColor: "rgba(242,131,175,0.45)",
     top: -40,
     right: -70,
   },
@@ -120,7 +107,7 @@ const styles = StyleSheet.create({
     width: 220,
     height: 220,
     borderRadius: 110,
-    backgroundColor: "rgba(91,140,255,0.14)",
+    backgroundColor: "rgba(243,204,151,0.85)",
     bottom: "12%",
     left: -80,
   },
@@ -129,64 +116,65 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginBottom: space.sm,
   },
-  markGlow: {
-    position: "absolute",
-    top: -6,
-    left: -6,
-    width: 76,
-    height: 76,
-    borderRadius: 28,
-    backgroundColor: colors.glow,
-  },
-  mark: {
-    width: 64,
-    height: 64,
-    borderRadius: 22,
-    backgroundColor: colors.accent,
+  heroPlain: {
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: space.sm,
   },
   brand: {
     color: colors.ink,
     fontSize: 18,
-    fontWeight: "800",
+    fontFamily: font.display,
     letterSpacing: 0.4,
+  },
+  brandPlain: {
+    fontSize: 36,
+    lineHeight: 42,
+    textAlign: "center",
+  },
+  centeredText: {
+    textAlign: "center",
+    alignSelf: "stretch",
   },
   eyebrow: {
     marginTop: space.md,
     color: colors.accent,
     fontSize: 13,
-    fontWeight: "800",
+    fontFamily: font.medium, fontWeight: "600",
     letterSpacing: 1.2,
     textTransform: "uppercase",
   },
   title: {
     color: colors.ink,
     fontSize: 34,
-    lineHeight: 40,
-    fontWeight: "800",
+    lineHeight: 42,
+    fontFamily: font.display,
     letterSpacing: -0.6,
   },
   subtitle: {
     color: colors.inkMuted,
     fontSize: 15,
     lineHeight: 22,
+    fontFamily: font.body,
     maxWidth: 320,
   },
   card: {
-    borderRadius: radii.xl,
-    overflow: "hidden",
+    borderRadius: radii.lg,
     borderWidth: 1,
-    borderColor: "rgba(46,230,197,0.18)",
+    borderColor: colors.line,
     backgroundColor: colors.surface,
+    padding: space.sm,
+    gap: space.lg,
   },
-  cardInner: {
-    padding: space.xl,
+  cardPlain: {
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    padding: 0,
     gap: space.lg,
   },
   footer: {
     alignItems: "center",
     gap: space.md,
+  },
+  footerPlain: {
+    marginTop: space.md,
   },
 });

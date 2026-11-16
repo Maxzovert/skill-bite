@@ -4,13 +4,16 @@
     "slug": "skillbite",
     "version": "0.1.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "platforms": [
       "ios",
-      "android"
+      "android",
+      "web"
     ],
+    "icon": "./assets/App_Logo.png",
     "splash": {
-      "backgroundColor": "#070B14",
+      "image": "./assets/App_Logo.png",
+      "backgroundColor": "#FBF4EB",
       "resizeMode": "contain"
     },
     "ios": {
@@ -20,7 +23,8 @@
     "android": {
       "package": "com.skillbite.app",
       "adaptiveIcon": {
-        "backgroundColor": "#070B14"
+        "foregroundImage": "./assets/App_Logo.png",
+        "backgroundColor": "#FBF4EB"
       }
     },
     "scheme": "skillbite",

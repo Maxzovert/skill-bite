@@ -5,7 +5,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { api } from "../api";
 import { AuthShell } from "../components/AuthShell";
 import { Icon } from "../icons";
-import { colors, radii, space } from "../theme";
+import { colors, font, radii, space } from "../theme";
 import { Banner, Field } from "../ui";
 import type { AuthStackParamList } from "../navigation";
 
@@ -58,32 +58,9 @@ export function RegisterScreen({ navigation }: Props) {
         </Pressable>
       )}
     >
-      <View style={styles.fieldBlock}>
-        <View style={styles.fieldIcon}>
-          <Icon name="accountActive" size={18} color={colors.accent} />
-        </View>
-        <View style={styles.fieldBody}>
-          <Field label="Display name" value={displayName} onChangeText={setDisplayName} />
-        </View>
-      </View>
-
-      <View style={styles.fieldBlock}>
-        <View style={styles.fieldIcon}>
-          <Icon name="mail" size={18} color={colors.accent} />
-        </View>
-        <View style={styles.fieldBody}>
-          <Field label="Email" value={email} onChangeText={setEmail} />
-        </View>
-      </View>
-
-      <View style={styles.fieldBlock}>
-        <View style={styles.fieldIcon}>
-          <Icon name="lock" size={18} color={colors.accent} />
-        </View>
-        <View style={styles.fieldBody}>
-          <Field label="Password" value={password} onChangeText={setPassword} secure hint="At least 8 characters." />
-        </View>
-      </View>
+      <Field label="Display name" value={displayName} onChangeText={setDisplayName} />
+      <Field label="Email" value={email} onChangeText={setEmail} />
+      <Field label="Password" value={password} onChangeText={setPassword} secure hint="At least 8 characters." />
 
       {error ? <Banner>{error}</Banner> : null}
       {message ? <Banner tone="info">{message}</Banner> : null}
@@ -95,13 +72,13 @@ export function RegisterScreen({ navigation }: Props) {
         onPress={() => void submit()}
       >
         <LinearGradient
-          colors={[colors.accentAlt, "#3D74F0"]}
+          colors={[colors.accentAlt, colors.accent]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.ctaFill}
         >
           <Text style={styles.ctaText}>{busy ? "Creating…" : "Create account"}</Text>
-          {!busy ? <Icon name="check" size={18} color="#F4F7FF" /> : null}
+          {!busy ? <Icon name="check" size={18} color={colors.accentInk} /> : null}
         </LinearGradient>
       </Pressable>
     </AuthShell>
@@ -123,7 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.accentSoft,
     borderWidth: 1,
-    borderColor: "rgba(46,230,197,0.25)",
+    borderColor: colors.line,
   },
   fieldBody: { flex: 1 },
   cta: {
@@ -141,9 +118,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   ctaText: {
-    color: "#F4F7FF",
+    color: colors.accentInk,
     fontSize: 16,
-    fontWeight: "800",
+    fontFamily: font.heavy, fontWeight: "800",
   },
   switchPill: {
     flexDirection: "row",
@@ -156,6 +133,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.line,
   },
-  switchText: { color: colors.inkMuted, fontWeight: "600", fontSize: 14 },
-  switchAccent: { color: colors.accent, fontWeight: "800", fontSize: 14 },
+  switchText: { color: colors.inkMuted, fontFamily: font.medium, fontWeight: "600", fontSize: 14 },
+  switchAccent: { color: colors.accent, fontFamily: font.heavy, fontWeight: "800", fontSize: 14 },
 });

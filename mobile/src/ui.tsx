@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Icon } from "./icons";
-import { colors, motion, radii, space } from "./theme";
+import { colors, font, radii, space } from "./theme";
 
 export function Button({
   children,
@@ -110,22 +110,11 @@ export function EmptyState({ children }: { children: ReactNode }) {
 }
 
 export function LoadingState() {
-  const pulse = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: motion.slow, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.5, duration: motion.slow, useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
   return (
-    <Animated.View style={[styles.loading, { opacity: pulse }]}>
+    <View style={styles.loading}>
       <ActivityIndicator color={colors.accent} />
       <Text style={styles.hint}>Loading</Text>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -197,8 +186,8 @@ export function Dialog({
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg, padding: space.lg, gap: space.lg },
-  title: { fontSize: 30, lineHeight: 36, fontWeight: "800", color: colors.ink, letterSpacing: -0.4 },
-  section: { fontSize: 20, lineHeight: 26, fontWeight: "700", color: colors.ink },
+  title: { fontSize: 30, lineHeight: 38, fontFamily: font.display, color: colors.ink, textAlign: "center" },
+  section: { fontSize: 20, lineHeight: 26, fontFamily: font.display, color: colors.ink },
   button: {
     minHeight: 52,
     justifyContent: "center",
@@ -219,10 +208,10 @@ const styles = StyleSheet.create({
   },
   danger: { backgroundColor: colors.danger, borderColor: colors.danger },
   disabled: { opacity: 0.5 },
-  buttonText: { color: colors.ink, fontSize: 15, fontWeight: "700", textAlign: "center" },
+  buttonText: { color: colors.ink, fontSize: 15, fontFamily: font.bold, fontWeight: "700", textAlign: "center" },
   onAccent: { color: colors.accentInk },
   field: { gap: space.sm },
-  label: { fontSize: 14, lineHeight: 20, fontWeight: "700", color: colors.inkMuted },
+  label: { fontSize: 14, lineHeight: 20, fontFamily: font.bold, fontWeight: "700", color: colors.inkMuted },
   inputWrap: {
     minHeight: 48,
     borderWidth: 1,
@@ -235,6 +224,8 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: space.md,
     color: colors.ink,
+    fontFamily: font.body,
+    fontSize: 16,
   },
   inputWithEye: {
     paddingRight: 48,
@@ -250,16 +241,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   row: { flexDirection: "row", gap: space.sm, alignItems: "center" },
-  hint: { fontSize: 13, lineHeight: 18, color: colors.inkMuted },
-  error: { fontSize: 13, lineHeight: 18, color: colors.danger },
+  hint: { fontSize: 13, lineHeight: 18, fontFamily: font.body, color: colors.inkMuted },
+  error: { fontSize: 13, lineHeight: 18, fontFamily: font.body, color: colors.danger },
   bannerWrap: {
     borderWidth: 1,
     borderRadius: radii.md,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
   },
-  banner: { fontSize: 14, lineHeight: 20, fontWeight: "700" },
-  empty: { fontSize: 16, lineHeight: 24, color: colors.inkMuted },
+  banner: { fontSize: 14, lineHeight: 20, fontFamily: font.bold, fontWeight: "700" },
+  empty: { fontSize: 16, lineHeight: 24, fontFamily: font.body, color: colors.inkMuted },
   loading: { gap: space.sm, alignItems: "center", paddingVertical: space.xl },
   chip: {
     minHeight: 40,
@@ -271,7 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipSelected: { borderColor: colors.accent, backgroundColor: colors.accentSoft },
-  chipText: { fontSize: 14, fontWeight: "700", color: colors.inkMuted },
+  chipText: { fontSize: 14, fontFamily: font.bold, fontWeight: "700", color: colors.inkMuted },
   chipTextSelected: { color: colors.accent },
   card: {
     backgroundColor: colors.surface,
@@ -281,10 +272,10 @@ const styles = StyleSheet.create({
     padding: space.lg,
     gap: space.sm,
   },
-  cardTitle: { fontSize: 16, lineHeight: 24, fontWeight: "700", color: colors.ink },
+  cardTitle: { fontSize: 16, lineHeight: 24, fontFamily: font.bold, fontWeight: "700", color: colors.ink },
   dialogBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(5,8,15,0.72)",
+    backgroundColor: "rgba(196,54,112,0.35)",
     justifyContent: "center",
     padding: space.lg,
   },
