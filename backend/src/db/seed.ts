@@ -19,6 +19,7 @@ export async function seedReferenceData(prisma: PrismaClient): Promise<void> {
     { name: "Beginner", slug: "beginner" },
     { name: "Career", slug: "career" },
     { name: "Coding", slug: "coding" },
+    { name: "Fitness", slug: "fitness" },
     { name: "Soft Skills", slug: "soft-skills" },
     { name: "Exam Prep", slug: "exam-prep" },
     { name: "Quick Tips", slug: "quick-tips" },

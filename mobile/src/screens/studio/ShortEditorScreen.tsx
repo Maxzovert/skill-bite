@@ -27,6 +27,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
   const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState("DRAFT");
   const [mediaLabel, setMediaLabel] = useState("");
+  const [hasMedia, setHasMedia] = useState(false);
   const [duration, setDuration] = useState(60);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(!!existingId);
@@ -48,7 +49,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
         setCategories(categoryResult.items);
         if (!tagId && tagResult.items[0]) setTagId(tagResult.items[0].tagId);
         const firstCategory = categoryResult.items.find((item) => item.categoryId && item.slug !== "trending");
-        if (!categoryId && firstCategory?.categoryId) setCategoryId(firstCategory.categoryId);
+        if (!categoryId && !existingId && firstCategory?.categoryId) setCategoryId(firstCategory.categoryId);
       })
       .catch(() => undefined);
   }, [session?.token]);
@@ -59,8 +60,18 @@ export function ShortEditorScreen({ navigation, route }: Props) {
       .then(async (detail) => {
         setTitle(String(detail.title ?? ""));
         setDescription(String(detail.description ?? ""));
+        if (typeof detail.keywords === "string" && detail.keywords) setKeywords(detail.keywords);
+        if (typeof detail.sources === "string" && detail.sources) setSources(detail.sources);
         setStatus(String(detail.status ?? "DRAFT"));
         setContentId(existingId);
+        setHasMedia(detail.hasMedia === true);
+        if (detail.hasMedia === true) setMediaLabel("Uploaded video on file");
+        const detailCategories = Array.isArray(detail.categories) ? detail.categories as Array<{ categoryId?: string }> : [];
+        const firstCat = detailCategories.find((item) => typeof item.categoryId === "string");
+        if (firstCat?.categoryId) setCategoryId(firstCat.categoryId);
+        const detailTags = Array.isArray(detail.tags) ? detail.tags as Array<{ tagId?: string }> : [];
+        const firstTag = detailTags.find((item) => typeof item.tagId === "string");
+        if (firstTag?.tagId) setTagId(firstTag.tagId);
         await upsertStudioDraft(session.userId, {
           contentId: existingId,
           title: String(detail.title ?? existingId),
@@ -102,6 +113,9 @@ export function ShortEditorScreen({ navigation, route }: Props) {
 
   if (loading) return <Screen><LoadingState /></Screen>;
 
+  const canEdit = status !== "PUBLISHED";
+  const uploadDisabled = busy || !categoryId || !canEdit;
+
   return (
     <Screen>
       <View style={styles.headerBar}>
@@ -111,7 +125,10 @@ export function ShortEditorScreen({ navigation, route }: Props) {
           <Text style={styles.backText}>Create</Text>
         </Pressable>
       </View>
-      <Text style={styles.sub}>Status: {status}. Published shorts are not edited in place — take down, revise, then publish again.</Text>
+      <Text style={styles.sub}>
+        Status: {status}. Published shorts are not edited in place — archive, revise, then publish again.
+      </Text>
+      <Text style={styles.hint}>Video files are stored under the category folder in Cloudinary.</Text>
 
       <ScrollView contentContainerStyle={{ gap: 16, paddingBottom: 40 }}>
         <Field label="Title" value={title} onChangeText={setTitle} />
@@ -119,14 +136,15 @@ export function ShortEditorScreen({ navigation, route }: Props) {
         <Field label="Sources" value={sources} onChangeText={setSources} />
         <Field label="Keywords" value={keywords} onChangeText={setKeywords} hint="Comma-separated topics for search." />
 
-        <Text style={styles.label}>Category</Text>
+        <Text style={styles.label}>Category (required)</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {categories.map((category) => {
             const selected = category.categoryId === categoryId;
             return (
               <Pressable
                 key={category.slug}
-                style={[styles.chip, selected ? styles.chipOn : null]}
+                style={[styles.chip, selected ? styles.chipOn : null, !canEdit ? styles.chipDisabled : null]}
+                disabled={!canEdit}
                 onPress={() => {
                   if (category.categoryId) setCategoryId(category.categoryId);
                 }}
@@ -142,7 +160,12 @@ export function ShortEditorScreen({ navigation, route }: Props) {
           {tags.map((tag) => {
             const selected = tag.tagId === tagId;
             return (
-              <Pressable key={tag.tagId} style={[styles.chip, selected ? styles.chipOn : null]} onPress={() => setTagId(tag.tagId)}>
+              <Pressable
+                key={tag.tagId}
+                style={[styles.chip, selected ? styles.chipOn : null, !canEdit ? styles.chipDisabled : null]}
+                disabled={!canEdit}
+                onPress={() => setTagId(tag.tagId)}
+              >
                 <Text style={[styles.chipText, selected ? styles.chipTextOn : null]}>{tag.name}</Text>
               </Pressable>
             );
@@ -150,9 +173,13 @@ export function ShortEditorScreen({ navigation, route }: Props) {
         </ScrollView>
 
         <Pressable
-          style={styles.upload}
-          disabled={busy}
+          style={[styles.upload, uploadDisabled ? styles.uploadDisabled : null]}
+          disabled={uploadDisabled}
           onPress={() => void run(async () => {
+            if (!categoryId) {
+              setError("Pick a category before uploading.");
+              return;
+            }
             const picked = await pickShortVideo();
             if (!picked) return;
             let id = contentId;
@@ -164,11 +191,19 @@ export function ShortEditorScreen({ navigation, route }: Props) {
                 keywords,
                 durationSeconds: picked.durationSeconds,
                 tagIds: tagId ? [tagId] : [],
-                categoryIds: categoryId ? [categoryId] : [],
+                categoryIds: [categoryId],
               });
               id = created.contentId;
               setContentId(id);
               setStatus(created.status);
+            } else {
+              await contentApi.updateVideo(session.token, id, {
+                title: title || "Untitled short",
+                description,
+                sources,
+                keywords,
+                categoryIds: [categoryId],
+              });
             }
             await contentApi.saveMedia(session.token, id, {
               mimeType: picked.mimeType,
@@ -177,6 +212,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
             });
             setDuration(picked.durationSeconds);
             setMediaLabel(picked.fileName);
+            setHasMedia(true);
             await upsertStudioDraft(session.userId, {
               contentId: id,
               title: title || "Untitled short",
@@ -189,18 +225,32 @@ export function ShortEditorScreen({ navigation, route }: Props) {
         >
           <Icon name="video" size={22} color={colors.accent} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.uploadTitle}>{mediaLabel ? "Replace short video" : "Upload short video"}</Text>
-            <Text style={styles.uploadMeta}>{mediaLabel || "Pick a short clip from your library (keep it brief)."}</Text>
+            <Text style={styles.uploadTitle}>{hasMedia || mediaLabel ? "Replace short video" : "Upload short video"}</Text>
+            <Text style={styles.uploadMeta}>
+              {!categoryId
+                ? "Select a category first — files are stored under that folder."
+                : mediaLabel || "Pick a short clip from your library (keep it brief)."}
+            </Text>
           </View>
         </Pressable>
 
         <View style={styles.row}>
           <Button
             primary
-            disabled={busy || !title.trim()}
+            disabled={busy || !title.trim() || !canEdit}
             onPress={() => void run(async () => {
+              if (!categoryId) {
+                setError("Pick a category before saving.");
+                return;
+              }
               if (contentId) {
-                await contentApi.updateVideo(session.token, contentId, { title, description, sources, keywords });
+                await contentApi.updateVideo(session.token, contentId, {
+                  title,
+                  description,
+                  sources,
+                  keywords,
+                  categoryIds: [categoryId],
+                });
                 await upsertStudioDraft(session.userId, {
                   contentId,
                   title,
@@ -208,7 +258,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
                   kind: "VIDEO",
                   updatedAt: new Date().toISOString(),
                 });
-                setMessage("Draft saved.");
+                setMessage(hasMedia ? "Draft saved. Category folder updated if you changed it." : "Draft saved.");
                 return;
               }
               const created = await contentApi.createVideo(session.token, {
@@ -218,7 +268,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
                 keywords,
                 durationSeconds: duration,
                 tagIds: tagId ? [tagId] : [],
-                categoryIds: categoryId ? [categoryId] : [],
+                categoryIds: [categoryId],
               });
               setContentId(created.contentId);
               setStatus(created.status);
@@ -243,7 +293,7 @@ export function ShortEditorScreen({ navigation, route }: Props) {
             const result = await contentApi.publishVideo(session.token, contentId);
             setStatus(result.status);
             await updateStudioDraftStatus(session.userId, contentId, result.status);
-            setMessage("Published. Learners can find this short in the Learn feed.");
+            setMessage("Published. Learners can find this short in Explore.");
           })}
         >
           Publish short
@@ -255,10 +305,10 @@ export function ShortEditorScreen({ navigation, route }: Props) {
             const result = await contentApi.takedown(session.token, contentId);
             setStatus(result.status);
             await updateStudioDraftStatus(session.userId, contentId, result.status);
-            setMessage("Taken down. Edit the draft, then publish again.");
+            setMessage("Archived. Edit the draft, then publish again.");
           })}
         >
-          Take down
+          Archive
         </Button>
 
         {message ? <Banner tone="info">{message}</Banner> : null}
@@ -273,6 +323,7 @@ const styles = StyleSheet.create({
   back: { position: "absolute", left: 0, top: 0, bottom: 0, flexDirection: "row", alignItems: "center", gap: 6 },
   backText: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
   sub: { color: colors.inkMuted, fontSize: 13, fontFamily: font.body, marginTop: -8 },
+  hint: { color: colors.inkMuted, fontSize: 12, fontFamily: font.body, marginTop: -8 },
   label: { fontSize: 14, fontFamily: font.medium, fontWeight: "600", color: colors.ink },
   chip: {
     minHeight: 36,
@@ -284,6 +335,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chipOn: { backgroundColor: colors.accentSoft, borderColor: colors.accent },
+  chipDisabled: { opacity: 0.5 },
   chipText: { color: colors.inkMuted, fontFamily: font.bold, fontWeight: "700", fontSize: 13 },
   chipTextOn: { color: colors.accent },
   upload: {
@@ -296,6 +348,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     backgroundColor: colors.surface,
   },
+  uploadDisabled: { opacity: 0.55 },
   uploadTitle: { color: colors.ink, fontFamily: font.bold, fontWeight: "700" },
   uploadMeta: { color: colors.inkMuted, fontSize: 12, marginTop: 2 },
   row: { gap: 8 },

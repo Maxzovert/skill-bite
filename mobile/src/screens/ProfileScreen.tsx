@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { BottomTabScreenProps } from "@react-navigation/bottom-tabs";
 import { useFocusEffect, type CompositeScreenProps } from "@react-navigation/native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -49,7 +49,7 @@ export function ProfileScreen({ navigation }: Props) {
     void load();
   }, [load]));
 
-  async function manage(item: OwnedContent, action: "publish" | "takedown") {
+  async function manage(item: OwnedContent, action: "publish" | "archive") {
     if (!session?.token) return;
     setBusyId(item.contentId);
     setError("");
@@ -62,7 +62,7 @@ export function ProfileScreen({ navigation }: Props) {
         setItems((current) => current.map((row) => (
           row.contentId === item.contentId ? { ...row, status: result.status } : row
         )));
-        setMessage(action === "publish" ? "Playlist published." : "Playlist taken down.");
+        setMessage(action === "publish" ? "Playlist published." : "Playlist archived. Edit is allowed after archive.");
         return;
       }
       const result = action === "publish"
@@ -71,12 +71,23 @@ export function ProfileScreen({ navigation }: Props) {
       setItems((current) => current.map((row) => (
         row.contentId === item.contentId ? { ...row, status: result.status } : row
       )));
-      setMessage(action === "publish" ? "Short published to Explore." : "Short taken down.");
+      setMessage(action === "publish" ? "Short published to Explore." : "Short archived. Edit is allowed after archive.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Could not update content");
     } finally {
       setBusyId("");
     }
+  }
+
+  function confirmArchive(item: OwnedContent) {
+    Alert.alert(
+      "Archive this content?",
+      "Archive removes it from Explore. You can edit and publish again afterward. This is not a permanent delete.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Archive", style: "destructive", onPress: () => void manage(item, "archive") },
+      ],
+    );
   }
 
   if (!session) {
@@ -137,12 +148,17 @@ export function ProfileScreen({ navigation }: Props) {
               <Text style={styles.itemMeta}>{item.status}</Text>
             </Pressable>
             {item.status !== "PUBLISHED" ? (
-              <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "publish")}>
-                <Text style={styles.action}>Publish</Text>
-              </Pressable>
+              <View style={styles.actions}>
+                <Pressable onPress={() => navigation.navigate("ShortEditor", { contentId: item.contentId })}>
+                  <Text style={styles.action}>Edit</Text>
+                </Pressable>
+                <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "publish")}>
+                  <Text style={styles.action}>Publish</Text>
+                </Pressable>
+              </View>
             ) : (
-              <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "takedown")}>
-                <Text style={styles.actionDanger}>Take down</Text>
+              <Pressable disabled={busyId === item.contentId} onPress={() => confirmArchive(item)}>
+                <Text style={styles.actionDanger}>Archive</Text>
               </Pressable>
             )}
           </View>
@@ -162,12 +178,17 @@ export function ProfileScreen({ navigation }: Props) {
               <Text style={styles.itemMeta}>{item.status}</Text>
             </Pressable>
             {item.status !== "PUBLISHED" ? (
-              <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "publish")}>
-                <Text style={styles.action}>Publish</Text>
-              </Pressable>
+              <View style={styles.actions}>
+                <Pressable onPress={() => navigation.navigate("CourseStudio", { contentId: item.contentId })}>
+                  <Text style={styles.action}>Edit</Text>
+                </Pressable>
+                <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "publish")}>
+                  <Text style={styles.action}>Publish</Text>
+                </Pressable>
+              </View>
             ) : (
-              <Pressable disabled={busyId === item.contentId} onPress={() => void manage(item, "takedown")}>
-                <Text style={styles.actionDanger}>Take down</Text>
+              <Pressable disabled={busyId === item.contentId} onPress={() => confirmArchive(item)}>
+                <Text style={styles.actionDanger}>Archive</Text>
               </Pressable>
             )}
           </View>
@@ -242,6 +263,7 @@ const styles = StyleSheet.create({
   },
   itemTitle: { color: colors.ink, fontFamily: font.bold, fontWeight: "700", fontSize: 15 },
   itemMeta: { color: colors.inkMuted, fontSize: 12, fontFamily: font.medium, fontWeight: "600" },
+  actions: { flexDirection: "row", alignItems: "center", gap: 12 },
   action: { color: colors.accent, fontFamily: font.heavy, fontWeight: "800", fontSize: 13 },
   actionDanger: { color: colors.danger, fontFamily: font.heavy, fontWeight: "800", fontSize: 13 },
   actionRow: {

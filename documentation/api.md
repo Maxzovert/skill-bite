@@ -80,12 +80,12 @@ Creator or Admin. A creator may change only owned content. Publish has no approv
 
 | Method and path | Purpose |
 |---|---|
-| `POST /api/v1/videos` | Create a draft video: title, description, sources, tags (`tagIds`), optional categories (`categoryIds`), keywords. |
-| `PATCH /api/v1/videos/:contentId` | Edit a draft. Published videos return 409. |
-| `PUT /api/v1/videos/:contentId/media` | Store media. Body `{ mimeType, dataBase64, durationSeconds }`. Uses Cloudinary when `CLOUDINARY_*` is set; otherwise local disk. |
+| `POST /api/v1/videos` | Create a draft video: title, description, sources, tags (`tagIds`), categories (`categoryIds`), keywords. At least one category is required before media upload. |
+| `PATCH /api/v1/videos/:contentId` | Edit a draft or unpublished video (title, description, keywords, sources, `categoryIds`). Published videos return 409 — archive (takedown) first. Changing `categoryIds` renames the media object into the new category folder when media already exists. |
+| `PUT /api/v1/videos/:contentId/media` | Store media. Body `{ mimeType, dataBase64, durationSeconds }`. Requires at least one linked category (400 `validation` otherwise). Public id / path is `{CLOUDINARY_FOLDER}/{categorySlug}/{contentId}` (local: `{MEDIA_ROOT}/{categorySlug}/{contentId}/video.bin`). Uses Cloudinary when `CLOUDINARY_*` is set; otherwise local disk. Published videos return 409. |
 | `GET /api/v1/videos/:contentId/media` | Read bytes. Published content is readable. A draft is readable by the owner or an admin. |
 | `POST /api/v1/videos/:contentId/publish` | Publish when title, description, creator, media, and required metadata exist. |
-| `POST /api/v1/videos/:contentId/takedown` | Owner unpublishes so a revision can be edited and published again. |
+| `POST /api/v1/videos/:contentId/takedown` | Owner archives (unpublishes to `UNPUBLISHED`) so a revision can be edited and published again. Mobile UI labels this Archive. There is no separate archive route. |
 | `POST /api/v1/videos/:contentId/captions` | Add an uploaded or generated caption. |
 | `POST /api/v1/videos/:contentId/attachments` | Optional PDF, text, or hyperlink. |
 | `DELETE /api/v1/videos/:contentId/attachments/:attachmentId` | Remove an owned attachment. |
@@ -101,7 +101,7 @@ Admin content:
 
 | Method and path | Purpose |
 |---|---|
-| `POST /api/v1/admin/content/:contentId/delete` | Soft-delete. Hidden from discovery. Recoverable. |
+| `POST /api/v1/admin/content/:contentId/delete` | Soft-delete (`REMOVED` + `deletedAt`). Hidden from discovery. Recoverable. Best-effort delete of the Cloudinary/local media object; failure does not block soft-delete. Permanent delete stays admin-only. |
 | `POST /api/v1/admin/content/:contentId/restore` | Restore deleted content. |
 
 ## Learning
@@ -171,7 +171,7 @@ Filtering that is already decided:
 |---|---|---|
 | Google sign-in | `POST /api/v1/auth/google` sends `identityToken`. The server checks signature, issuer, audience, expiry, and verified email with Google. A typed email is not accepted as proof. | Invalid token is 401. Google being unreachable is 500 with a generic message. Do not create an account on an unchecked token. |
 | Email delivery | Verification and password recovery must be delivered. The provider is not chosen. | The API still stores the hashed single-use token. The response must not reveal whether the mailbox exists. |
-| Media storage | `PUT /api/v1/videos/:contentId/media` stores a reference, not the bytes in PostgreSQL. Cloudinary is the first production media host (`media_reference` like `cloudinary:<public_id>`). Local disk remains the fallback when Cloudinary env vars are unset (tests and early local work). | A missing or unreadable object is not a successful playback. Playback still goes through `GET /api/v1/videos/:contentId/media` so access stays restricted. |
+| Media storage | `PUT /api/v1/videos/:contentId/media` stores a reference, not the bytes in PostgreSQL. Cloudinary is the first production media host (`media_reference` like `cloudinary:skillbite/{categorySlug}/{contentId}`). Category slug comes from the first linked category (seed includes `fitness`). Local disk remains the fallback when Cloudinary env vars are unset (tests and early local work), mirrored as `{MEDIA_ROOT}/{categorySlug}/{contentId}/video.bin`. | A missing or unreadable object is not a successful playback. Playback still goes through `GET /api/v1/videos/:contentId/media` so access stays restricted. Admin soft-delete best-effort removes the object; DB soft-delete remains source of truth. |
 | Push | `POST /api/v1/devices` stores an encrypted device token. Firebase Cloud Messaging is an example, not a required provider. | Delivery failure does not block playback, progress, or bookmarks. |
 
 No payment provider.

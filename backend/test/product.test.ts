@@ -258,9 +258,20 @@ test("migration, constraints, and API", async (t) => {
     });
     assert.equal(other.status, 201);
     const bea = await json(base, "POST", "/api/v1/auth/login", { email: "bea@example.com", password: "password1" });
-    const video = await json(base, "POST", "/api/v1/videos", { title: "Intro", durationSeconds: 100 }, token);
+    const fitness = await prisma.category.findUniqueOrThrow({ where: { slug: "fitness" } });
+    const video = await json(base, "POST", "/api/v1/videos", {
+      title: "Intro",
+      durationSeconds: 100,
+      categoryIds: [fitness.categoryId],
+    }, token);
     const contentId = video.body.contentId;
     assert.equal((await json(base, "PATCH", `/api/v1/videos/${contentId}`, { title: "Stolen" }, bea.body.accessToken)).status, 403);
+    const noCategoryVideo = await json(base, "POST", "/api/v1/videos", { title: "No cat", durationSeconds: 10 }, token);
+    assert.equal((await json(base, "PUT", `/api/v1/videos/${noCategoryVideo.body.contentId}/media`, {
+      mimeType: "video/mp4",
+      dataBase64: Buffer.from("x").toString("base64"),
+      durationSeconds: 10,
+    }, token)).status, 400);
     assert.equal((await json(base, "PUT", `/api/v1/videos/${contentId}/media`, { mimeType: "text/plain", dataBase64: Buffer.from("hi").toString("base64") }, token)).status, 400);
     const media = await json(base, "PUT", `/api/v1/videos/${contentId}/media`, {
       mimeType: "video/mp4",
@@ -268,6 +279,7 @@ test("migration, constraints, and API", async (t) => {
       durationSeconds: 100,
     }, token);
     assert.equal(media.status, 200);
+    assert.match(String(media.body.mediaReference), /fitness\//);
     assert.equal((await json(base, "GET", `/api/v1/videos/${contentId}/media`, undefined, bea.body.accessToken)).status, 403);
     assert.equal((await json(base, "POST", `/api/v1/videos/${contentId}/publish`)).status, 401);
     assert.equal((await json(base, "POST", `/api/v1/videos/${contentId}/publish`, undefined, token)).status, 400);
@@ -276,7 +288,15 @@ test("migration, constraints, and API", async (t) => {
     assert.equal((await json(base, "POST", `/api/v1/videos/${contentId}/publish`, undefined, token)).status, 200);
     assert.equal((await json(base, "PATCH", `/api/v1/videos/${contentId}`, { title: "Changed" }, token)).status, 409);
     assert.equal((await json(base, "POST", `/api/v1/videos/${contentId}/takedown`, undefined, token)).status, 200);
-    assert.equal((await json(base, "PATCH", `/api/v1/videos/${contentId}`, { title: "Revised" }, token)).status, 200);
+    const unpublished = await prisma.content.findUniqueOrThrow({ where: { contentId } });
+    assert.equal(unpublished.status, "UNPUBLISHED");
+    const coding = await prisma.category.findUniqueOrThrow({ where: { slug: "coding" } });
+    assert.equal((await json(base, "PATCH", `/api/v1/videos/${contentId}`, {
+      title: "Revised",
+      categoryIds: [coding.categoryId],
+    }, token)).status, 200);
+    const afterRename = await prisma.videoDetails.findUniqueOrThrow({ where: { contentId } });
+    assert.match(afterRename.mediaReference, /coding\//);
     await json(base, "POST", `/api/v1/videos/${contentId}/publish`, undefined, token);
     const category = await prisma.category.findUniqueOrThrow({ where: { slug: "trending" } });
     await prisma.contentCategory.create({ data: { contentId, categoryId: category.categoryId } });
@@ -303,7 +323,11 @@ test("migration, constraints, and API", async (t) => {
     const course = await json(base, "POST", "/api/v1/courses", { title: "Course" }, token);
     const module = await json(base, "POST", `/api/v1/courses/${course.body.contentId}/modules`, { title: "Module", position: 1 }, token);
     assert.equal((await json(base, "POST", `/api/v1/modules/${module.body.moduleId}/lessons`, { title: "One", position: 1, videoContentId: contentId }, token)).status, 201);
-    const videoB = await json(base, "POST", "/api/v1/videos", { title: "Second", durationSeconds: 50 }, token);
+    const videoB = await json(base, "POST", "/api/v1/videos", {
+      title: "Second",
+      durationSeconds: 50,
+      categoryIds: [fitness.categoryId],
+    }, token);
     await json(base, "PUT", `/api/v1/videos/${videoB.body.contentId}/media`, { mimeType: "video/mp4", dataBase64: Buffer.from("more").toString("base64"), durationSeconds: 50 }, token);
     assert.equal((await json(base, "POST", `/api/v1/modules/${module.body.moduleId}/lessons`, { title: "Two", position: 1, videoContentId: videoB.body.contentId }, token)).status, 409);
     assert.equal((await json(base, "POST", `/api/v1/modules/${module.body.moduleId}/lessons`, { title: "Two", position: 2, videoContentId: contentId }, token)).status, 409);
