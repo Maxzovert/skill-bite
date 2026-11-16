@@ -46,6 +46,24 @@ export function createContentService(access: Access) {
       const content = await ownContent(auth, contentId);
       if (content.contentType !== "VIDEO") throw new HttpError(404, "not_found", "Not found");
       if (content.status === "PUBLISHED") throw new HttpError(409, "conflict", "Published video cannot be edited in place");
+
+      const previousSlug = content.categories[0]?.category.slug ?? "uncategorized";
+      let nextSlug = previousSlug;
+
+      if (Array.isArray(body.categoryIds)) {
+        const categoryIds = body.categoryIds.filter((id): id is string => typeof id === "string");
+        await prisma.contentCategory.deleteMany({ where: { contentId: content.contentId } });
+        for (const categoryId of categoryIds) {
+          await prisma.contentCategory.create({ data: { contentId: content.contentId, categoryId } });
+        }
+        if (categoryIds.length > 0) {
+          const first = await prisma.category.findUnique({ where: { categoryId: categoryIds[0]! } });
+          nextSlug = first?.slug ?? "uncategorized";
+        } else {
+          nextSlug = "uncategorized";
+        }
+      }
+
       await prisma.content.update({
         where: { contentId: content.contentId },
         data: {
@@ -55,11 +73,32 @@ export function createContentService(access: Access) {
           video: typeof body.sources === "string" ? { update: { sources: body.sources } } : undefined,
         },
       });
+
+      const mediaReference = content.video?.mediaReference;
+      if (mediaReference && nextSlug !== previousSlug) {
+        try {
+          const moved = await deps.storage.moveVideo(mediaReference, content.contentId, nextSlug);
+          await prisma.videoDetails.update({
+            where: { contentId: content.contentId },
+            data: { mediaReference: moved },
+          });
+        } catch {
+          throw new HttpError(502, "internal_error", "Internal error");
+        }
+      }
+
       return { contentId: content.contentId };
     },
 
     async saveMedia(auth: Parameters<typeof ownContent>[0], contentId: string, body: Record<string, unknown>) {
       const content = await ownContent(auth, contentId);
+      if (content.status === "PUBLISHED") {
+        throw new HttpError(409, "conflict", "Published video cannot be edited in place");
+      }
+      const categorySlug = content.categories[0]?.category.slug;
+      if (!categorySlug) {
+        throw new HttpError(400, "validation", "Category is required before uploading media");
+      }
       const mime = typeof body.mimeType === "string" ? body.mimeType : "";
       const data = typeof body.dataBase64 === "string" ? body.dataBase64 : "";
       if (!mime.startsWith("video/")) throw new HttpError(400, "validation", "File must be a video");
@@ -67,7 +106,7 @@ export function createContentService(access: Access) {
       if (bytes.length === 0) throw new HttpError(400, "validation", "File is empty");
       let reference: string;
       try {
-        reference = await deps.storage.saveVideo(content.contentId, bytes);
+        reference = await deps.storage.saveVideo(content.contentId, bytes, { categorySlug });
       } catch {
         throw new HttpError(502, "internal_error", "Internal error");
       }
@@ -320,7 +359,13 @@ export function createContentService(access: Access) {
     async contentDetail(contentId: string, getAuth: () => Promise<Parameters<typeof ownContent>[0]>) {
       const content = await prisma.content.findUnique({
         where: { contentId },
-        include: { video: true, course: { include: { modules: { include: { lessons: true }, orderBy: { position: "asc" } } } }, attachments: true },
+        include: {
+          video: true,
+          course: { include: { modules: { include: { lessons: true }, orderBy: { position: "asc" } } } },
+          attachments: true,
+          categories: { include: { category: true } },
+          tags: { include: { tag: true } },
+        },
       });
       if (!content || content.deletedAt) throw new HttpError(404, "not_found", "Not found");
       if (content.status !== "PUBLISHED") {
@@ -336,7 +381,20 @@ export function createContentService(access: Access) {
         contentType: content.contentType,
         title: content.title,
         description: content.description,
+        keywords: content.keywords,
         status: content.status,
+        sources: content.video?.sources ?? null,
+        hasMedia: Boolean(content.video?.mediaReference),
+        categories: content.categories.map((row) => ({
+          categoryId: row.category.categoryId,
+          name: row.category.name,
+          slug: row.category.slug,
+        })),
+        tags: content.tags.map((row) => ({
+          tagId: row.tag.tagId,
+          name: row.tag.name,
+          slug: row.tag.slug,
+        })),
         modules: content.course?.modules.map((module) => ({
           moduleId: module.moduleId,
           title: module.title,

@@ -60,7 +60,10 @@ export function createAccess(config: AppConfig, deps: ApiDeps) {
   }
 
   async function ownContent(auth: AuthContext, contentId: string) {
-    const content = await prisma.content.findUnique({ where: { contentId }, include: { video: true, tags: true } });
+    const content = await prisma.content.findUnique({
+      where: { contentId },
+      include: { video: true, tags: true, categories: { include: { category: true } } },
+    });
     if (!content) throw new HttpError(404, "not_found", "Not found");
     if (auth.role !== "ADMIN" && content.creatorId !== auth.userId) throw new HttpError(403, "forbidden", "Not allowed");
     return content;

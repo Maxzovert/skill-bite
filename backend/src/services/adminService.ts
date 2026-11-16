@@ -3,7 +3,7 @@ import { HttpError } from "../errors.js";
 import type { Access } from "./access.js";
 
 export function createAdminService(access: Access) {
-  const { prisma, audit } = access;
+  const { prisma, audit, deps } = access;
   return {
     async users() {
       const items = await prisma.appUser.findMany({ take: LIST_LIMIT, orderBy: { createdAt: "desc" }, include: { role: true } });
@@ -85,12 +85,24 @@ export function createAdminService(access: Access) {
       return { limit: LIST_LIMIT, items };
     },
     async removeContent(actorUserId: string, contentId: string) {
+      const content = await prisma.content.findUnique({
+        where: { contentId },
+        include: { video: true },
+      });
       await prisma.$transaction(async (tx) => {
         await tx.content.update({ where: { contentId }, data: { deletedAt: new Date(), status: "REMOVED" } });
         await tx.auditLog.create({
           data: { actorUserId, action: "content_delete", targetType: "content", targetId: contentId, details: "content_delete" },
         });
       });
+      const mediaReference = content?.video?.mediaReference;
+      if (mediaReference) {
+        try {
+          await deps.storage.deleteVideo(mediaReference);
+        } catch {
+          /* best-effort Cloudinary/local cleanup; soft-delete remains source of truth */
+        }
+      }
       return { status: "REMOVED" as const };
     },
     async restoreContent(actorUserId: string, contentId: string) {
